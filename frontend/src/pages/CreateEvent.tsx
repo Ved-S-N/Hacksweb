@@ -5,26 +5,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Calendar as CalendarIcon, 
-  MapPin, 
-  Users, 
-  Trophy, 
-  Tag, 
+import {
+  Calendar as CalendarIcon,
+  MapPin,
+  Users,
+  Trophy,
+  Tag,
   Upload,
   Eye,
   Save,
   ArrowLeft,
   Plus,
-  X
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 // Using toLocaleDateString instead of date-fns for simplicity
@@ -34,17 +50,22 @@ const CreateEvent = () => {
   const [eventData, setEventData] = useState({
     title: "",
     description: "",
+    longDescription: "", // new field
     startDate: new Date(),
     endDate: new Date(),
     location: "",
     isOnline: false,
     maxParticipants: 100,
     totalPrize: 1000,
-    tracks: [] as string[],
+    participants: 0, // default for new event
+    status: "upcoming", // default status
     tags: [] as string[],
-    rules: "",
-    timeline: "",
-    sponsors: [] as string[],
+    rules: [] as string[], // array, not string
+    banner: "", // optional
+    organizerId: 1, // set after creating an organizer
+    tracks: [] as any[],
+    timeline: [] as any[],
+    sponsors: [] as any[],
   });
 
   const [newTag, setNewTag] = useState("");
@@ -58,7 +79,10 @@ const CreateEvent = () => {
   };
 
   const removeTag = (tag: string) => {
-    setEventData({ ...eventData, tags: eventData.tags.filter(t => t !== tag) });
+    setEventData({
+      ...eventData,
+      tags: eventData.tags.filter((t) => t !== tag),
+    });
   };
 
   const addTrack = () => {
@@ -69,7 +93,10 @@ const CreateEvent = () => {
   };
 
   const removeTrack = (track: string) => {
-    setEventData({ ...eventData, tracks: eventData.tracks.filter(t => t !== track) });
+    setEventData({
+      ...eventData,
+      tracks: eventData.tracks.filter((t) => t !== track),
+    });
   };
 
   const progress = (currentStep / 4) * 100;
@@ -77,7 +104,7 @@ const CreateEvent = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* Header */}
       <section className="bg-gradient-to-r from-primary/5 to-primary-hover/5 py-8 border-b">
         <div className="container">
@@ -107,7 +134,7 @@ const CreateEvent = () => {
               </Button>
             </div>
           </div>
-          
+
           {/* Progress */}
           <div className="mt-6">
             <div className="flex justify-between text-sm text-muted-foreground mb-2">
@@ -155,7 +182,9 @@ const CreateEvent = () => {
                       id="title"
                       placeholder="e.g. AI Innovation Challenge 2024"
                       value={eventData.title}
-                      onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
+                      onChange={(e) =>
+                        setEventData({ ...eventData, title: e.target.value })
+                      }
                     />
                   </div>
 
@@ -166,7 +195,27 @@ const CreateEvent = () => {
                       placeholder="Describe your event, its goals, and what participants can expect..."
                       className="min-h-[120px]"
                       value={eventData.description}
-                      onChange={(e) => setEventData({ ...eventData, description: e.target.value })}
+                      onChange={(e) =>
+                        setEventData({
+                          ...eventData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="longDescription">Long Description</Label>
+                    <Textarea
+                      id="longDescription"
+                      placeholder="Provide a detailed description of the event..."
+                      className="min-h-[120px]"
+                      value={eventData.longDescription}
+                      onChange={(e) =>
+                        setEventData({
+                          ...eventData,
+                          longDescription: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -175,7 +224,10 @@ const CreateEvent = () => {
                       <Label>Start Date *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start">
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                          >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {eventData.startDate.toLocaleDateString()}
                           </Button>
@@ -184,7 +236,10 @@ const CreateEvent = () => {
                           <Calendar
                             mode="single"
                             selected={eventData.startDate}
-                            onSelect={(date) => date && setEventData({ ...eventData, startDate: date })}
+                            onSelect={(date) =>
+                              date &&
+                              setEventData({ ...eventData, startDate: date })
+                            }
                             initialFocus
                           />
                         </PopoverContent>
@@ -195,7 +250,10 @@ const CreateEvent = () => {
                       <Label>End Date *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start">
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start"
+                          >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {eventData.endDate.toLocaleDateString()}
                           </Button>
@@ -204,7 +262,10 @@ const CreateEvent = () => {
                           <Calendar
                             mode="single"
                             selected={eventData.endDate}
-                            onSelect={(date) => date && setEventData({ ...eventData, endDate: date })}
+                            onSelect={(date) =>
+                              date &&
+                              setEventData({ ...eventData, endDate: date })
+                            }
                             initialFocus
                           />
                         </PopoverContent>
@@ -216,7 +277,9 @@ const CreateEvent = () => {
                     <div className="flex items-center space-x-2">
                       <Switch
                         checked={eventData.isOnline}
-                        onCheckedChange={(checked) => setEventData({ ...eventData, isOnline: checked })}
+                        onCheckedChange={(checked) =>
+                          setEventData({ ...eventData, isOnline: checked })
+                        }
                       />
                       <Label>This is an online event</Label>
                     </div>
@@ -228,7 +291,12 @@ const CreateEvent = () => {
                           id="location"
                           placeholder="e.g. San Francisco, CA or Specific venue address"
                           value={eventData.location}
-                          onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
+                          onChange={(e) =>
+                            setEventData({
+                              ...eventData,
+                              location: e.target.value,
+                            })
+                          }
                         />
                       </div>
                     )}
@@ -261,7 +329,12 @@ const CreateEvent = () => {
                         type="number"
                         min="1"
                         value={eventData.maxParticipants}
-                        onChange={(e) => setEventData({ ...eventData, maxParticipants: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setEventData({
+                            ...eventData,
+                            maxParticipants: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
 
@@ -272,7 +345,12 @@ const CreateEvent = () => {
                         type="number"
                         min="0"
                         value={eventData.totalPrize}
-                        onChange={(e) => setEventData({ ...eventData, totalPrize: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setEventData({
+                            ...eventData,
+                            totalPrize: parseInt(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                   </div>
@@ -285,7 +363,7 @@ const CreateEvent = () => {
                         placeholder="Add a tag (e.g. AI, Web3, Mobile)"
                         value={newTag}
                         onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                        onKeyPress={(e) => e.key === "Enter" && addTag()}
                       />
                       <Button type="button" onClick={addTag}>
                         <Plus className="h-4 w-4" />
@@ -293,9 +371,16 @@ const CreateEvent = () => {
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {eventData.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="flex items-center space-x-1">
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="flex items-center space-x-1"
+                        >
                           <span>{tag}</span>
-                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                          <X
+                            className="h-3 w-3 cursor-pointer"
+                            onClick={() => removeTag(tag)}
+                          />
                         </Badge>
                       ))}
                     </div>
@@ -345,7 +430,7 @@ const CreateEvent = () => {
                         placeholder="Add a track (e.g. Best AI Innovation, Best Mobile App)"
                         value={newTrack}
                         onChange={(e) => setNewTrack(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addTrack()}
+                        onKeyPress={(e) => e.key === "Enter" && addTrack()}
                       />
                       <Button type="button" onClick={addTrack}>
                         <Plus className="h-4 w-4" />
@@ -353,9 +438,15 @@ const CreateEvent = () => {
                     </div>
                     <div className="space-y-2 mt-2">
                       {eventData.tracks.map((track) => (
-                        <div key={track} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div
+                          key={track}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
                           <span>{track}</span>
-                          <X className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeTrack(track)} />
+                          <X
+                            className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground"
+                            onClick={() => removeTrack(track)}
+                          />
                         </div>
                       ))}
                     </div>
@@ -369,7 +460,9 @@ const CreateEvent = () => {
                       placeholder="List your event rules, requirements, and guidelines..."
                       className="min-h-[150px]"
                       value={eventData.rules}
-                      onChange={(e) => setEventData({ ...eventData, rules: e.target.value })}
+                      onChange={(e) =>
+                        setEventData({ ...eventData, rules: e.target.value })
+                      }
                     />
                   </div>
 
@@ -381,7 +474,9 @@ const CreateEvent = () => {
                       placeholder="Describe the event schedule, key milestones, and deadlines..."
                       className="min-h-[120px]"
                       value={eventData.timeline}
-                      onChange={(e) => setEventData({ ...eventData, timeline: e.target.value })}
+                      onChange={(e) =>
+                        setEventData({ ...eventData, timeline: e.target.value })
+                      }
                     />
                   </div>
                 </CardContent>
@@ -391,9 +486,7 @@ const CreateEvent = () => {
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   Previous
                 </Button>
-                <Button onClick={() => setCurrentStep(4)}>
-                  Next: Review
-                </Button>
+                <Button onClick={() => setCurrentStep(4)}>Next: Review</Button>
               </div>
             </TabsContent>
 
@@ -411,19 +504,26 @@ const CreateEvent = () => {
                     <div className="space-y-4">
                       <div>
                         <h3 className="font-semibold">Event Title</h3>
-                        <p className="text-muted-foreground">{eventData.title || "Not set"}</p>
+                        <p className="text-muted-foreground">
+                          {eventData.title || "Not set"}
+                        </p>
                       </div>
                       <div>
                         <h3 className="font-semibold">Description</h3>
-                        <p className="text-muted-foreground text-sm">{eventData.description || "Not set"}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {eventData.description || "Not set"}
+                        </p>
                       </div>
                       <div>
                         <h3 className="font-semibold">Date & Location</h3>
                         <p className="text-muted-foreground text-sm">
-                          {eventData.startDate.toLocaleDateString()} - {eventData.endDate.toLocaleDateString()}
+                          {eventData.startDate.toLocaleDateString()} -{" "}
+                          {eventData.endDate.toLocaleDateString()}
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          {eventData.isOnline ? "Online Event" : eventData.location || "Location not set"}
+                          {eventData.isOnline
+                            ? "Online Event"
+                            : eventData.location || "Location not set"}
                         </p>
                       </div>
                     </div>
@@ -434,14 +534,19 @@ const CreateEvent = () => {
                           Max {eventData.maxParticipants} participants
                         </p>
                         <p className="text-muted-foreground text-sm">
-                          ${eventData.totalPrize.toLocaleString()} total prize pool
+                          ${eventData.totalPrize.toLocaleString()} total prize
+                          pool
                         </p>
                       </div>
                       <div>
                         <h3 className="font-semibold">Tags</h3>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {eventData.tags.map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs">
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs"
+                            >
                               {tag}
                             </Badge>
                           ))}
@@ -465,10 +570,55 @@ const CreateEvent = () => {
                   Previous
                 </Button>
                 <div className="space-x-2">
-                  <Button variant="outline">
-                    Save as Draft
-                  </Button>
-                  <Button>
+                  <Button variant="outline">Save as Draft</Button>
+                  {/* <Button>
+                    Publish Event
+                  </Button> */}
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(
+                          "http://localhost:3000/api/events",
+                          {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              title: eventData.title,
+                              description: eventData.description,
+                              startDate: eventData.startDate.toISOString(),
+                              endDate: eventData.endDate.toISOString(),
+                              location: eventData.location,
+                              isOnline: eventData.isOnline,
+                              price: eventData.totalPrize,
+                              // totalPrize: eventData.totalPrize,
+
+                              maxParticipants: eventData.maxParticipants,
+                              participants: 0,
+                              status: "Published",
+                              tags: eventData.tags,
+                              tracks: eventData.tracks,
+                              rules: eventData.rules,
+                              timeline: eventData.timeline,
+                              sponsors: eventData.sponsors,
+                              organizerId: 1,
+                            }),
+                          }
+                        );
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                          alert("Event published successfully!");
+                          window.location.href = "/events"; // redirect to events page
+                        } else {
+                          alert("Failed to publish event: " + data.error);
+                        }
+                      } catch (err) {
+                        console.error(err);
+                        alert("An error occurred while publishing the event.");
+                      }
+                    }}
+                  >
                     Publish Event
                   </Button>
                 </div>

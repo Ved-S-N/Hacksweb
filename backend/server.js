@@ -12,7 +12,7 @@ import eventRoutes from "./routes/events.js";
 import submissionRoutes from "./routes/submissions.js";
 import judgingRoutes from "./routes/judging.js";
 import teamRoutes from "./routes/team.js";
-
+import organizerRoutes from "./routes/organizers.js";
 const app = express();
 const PORT = 3000;
 
@@ -41,6 +41,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/judging", judgingRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/organizers", organizerRoutes);
 
 // Start server and connect to MongoDB
 app.listen(PORT, async () => {

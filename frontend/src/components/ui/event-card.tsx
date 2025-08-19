@@ -1,6 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, MapPin, Users, Trophy, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -46,7 +51,9 @@ export const EventCard = ({
       case "upcoming":
         return <Badge variant="secondary">Upcoming</Badge>;
       case "ongoing":
-        return <Badge className="bg-success text-success-foreground">Live</Badge>;
+        return (
+          <Badge className="bg-success text-success-foreground">Live</Badge>
+        );
       case "ended":
         return <Badge variant="outline">Ended</Badge>;
     }
@@ -64,17 +71,21 @@ export const EventCard = ({
       {/* Banner */}
       <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/10 to-primary/5">
         {banner ? (
-          <img src={banner} alt={title} className="w-full h-full object-cover" />
+          <img
+            src={banner || "/default-banner.jpg"}
+            alt={title || "Event Banner"}
+            className="w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary-hover/20" />
         )}
-        <div className="absolute top-4 left-4">
-          {getStatusBadge()}
-        </div>
+        <div className="absolute top-4 left-4">{getStatusBadge()}</div>
         <div className="absolute top-4 right-4">
-          <Badge variant="outline" className="bg-background/80 backdrop-blur-sm">
-            <Trophy className="h-3 w-3 mr-1" />
-            ${totalPrize.toLocaleString()}
+          <Badge
+            variant="outline"
+            className="bg-background/80 backdrop-blur-sm"
+          >
+            <Trophy className="h-3 w-3 mr-1" />${totalPrize.toLocaleString()}
           </Badge>
         </div>
       </div>
@@ -111,7 +122,9 @@ export const EventCard = ({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center text-muted-foreground">
             <Calendar className="h-4 w-4 mr-2" />
-            <span>{formatDate(startDate)} - {formatDate(endDate)}</span>
+            <span>
+              {formatDate(startDate)} - {formatDate(endDate)}
+            </span>
           </div>
           <div className="flex items-center text-muted-foreground">
             <MapPin className="h-4 w-4 mr-2" />
@@ -127,7 +140,9 @@ export const EventCard = ({
           </div>
           <div className="text-muted-foreground">
             {maxParticipants && (
-              <span>{Math.round((participants / maxParticipants) * 100)}% full</span>
+              <span>
+                {Math.round((participants / maxParticipants) * 100)}% full
+              </span>
             )}
           </div>
         </div>
@@ -135,13 +150,16 @@ export const EventCard = ({
         {/* Organizer */}
         <div className="flex items-center space-x-2">
           <Avatar className="h-6 w-6">
-            <AvatarImage src={organizer.avatar} alt={organizer.name} />
+            <AvatarImage
+              src={organizer?.avatar || "/default-avatar.jpg"}
+              alt={organizer?.name || "Organizer"}
+            />
             <AvatarFallback className="text-xs">
-              {organizer.name.charAt(0)}
+              {organizer?.name ? organizer.name.charAt(0) : "?"}
             </AvatarFallback>
           </Avatar>
           <span className="text-sm text-muted-foreground">
-            by {organizer.name}
+            by {organizer?.name || "Unknown"}
           </span>
         </div>
       </CardContent>
@@ -149,29 +167,21 @@ export const EventCard = ({
       <CardFooter className="pt-0">
         <div className="flex w-full space-x-2">
           <Button asChild variant="outline" className="flex-1">
-            <Link to={`/event/${id}`}>
-              View Details
-            </Link>
+            <Link to={`/event/${id}`}>View Details</Link>
           </Button>
           {status === "upcoming" && (
             <Button asChild className="flex-1">
-              <Link to={`/event/${id}/register`}>
-                Register
-              </Link>
+              <Link to={`/event/${id}/register`}>Register</Link>
             </Button>
           )}
           {status === "ongoing" && (
             <Button asChild className="flex-1 bg-success hover:bg-success/90">
-              <Link to={`/event/${id}/submit`}>
-                Submit Project
-              </Link>
+              <Link to={`/event/${id}/submit`}>Submit Project</Link>
             </Button>
           )}
           {status === "ended" && (
             <Button asChild variant="outline" className="flex-1">
-              <Link to={`/event/${id}/results`}>
-                View Results
-              </Link>
+              <Link to={`/event/${id}/results`}>View Results</Link>
             </Button>
           )}
         </div>

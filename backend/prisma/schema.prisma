@@ -1,11 +1,11 @@
-datasource db {
-  provider = "sqlserver"
-  url      = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "sqlserver"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -14,76 +14,123 @@ model User {
   email       String       @unique
   role        String
   createdAt   DateTime     @default(now())
-  
-  teams       Team[]       @relation("TeamMembers")
-  submissions Submission[] @relation("UserSubmissions")
   judges      Judge[]
+  submissions Submission[] @relation("UserSubmissions")
+  teams       Team[]       @relation("TeamMembers")
 }
 
 model Event {
-  id          Int          @id @default(autoincrement())
-  title       String
-  description String
-  organizerId Int
-  createdAt   DateTime     @default(now())
+  id               Int        @id @default(autoincrement())
+  title            String
+  description      String
+  longDescription  String?    
+  startDate        DateTime   @default(now())
+  endDate          DateTime   @default(now())
+  location         String     @default("TBD")
+  isOnline         Boolean    @default(false)
+  totalPrize       Int        @default(0)
+  prize            Int?       //optional now 
+  participants     Int        @default(0)
+  maxParticipants  Int        @default(100)
+  status           String     @default("upcoming")
+  tags             String     @default("[]") // store JSON array as string
+  banner           String?    
+  rules            String     @default("[]") // store JSON array as string
+
+  organizerId      Int?
+  organizer        Organizer? @relation(fields: [organizerId], references: [id])
+  createdAt        DateTime   @default(now())
 
   teams       Team[]
   submissions Submission[]
   judges      Judge[]
+  tracks      Track[]
+  timeline    Timeline[]
+  sponsors    Sponsor[]
 }
 
+
+// Related models
+
+model Organizer {
+  id          Int     @id @default(autoincrement())
+  name        String
+  avatar      String?
+  description String?
+  website     String?
+  events      Event[]
+}
+
+model Track {
+  id      Int    @id @default(autoincrement())
+  name    String
+  prize   Int
+  eventId Int
+  event   Event  @relation(fields: [eventId], references: [id])
+}
+model Timeline {
+  id        Int    @id @default(autoincrement())
+  time      String
+  eventName String
+  date      String
+  eventId   Int
+  event     Event  @relation(fields: [eventId], references: [id])
+}
+
+
+model Sponsor {
+  id      Int    @id @default(autoincrement())
+  name    String
+  logo    String
+  tier    String
+  eventId Int
+  event   Event  @relation(fields: [eventId], references: [id])
+}
+
+
+
+
 model Team {
-  id       Int          @id @default(autoincrement())
-  name     String
-  eventId  Int
-  event    Event        @relation(fields: [eventId], references: [id])
-  
-  members  User[]       @relation("TeamMembers")
+  id          Int          @id @default(autoincrement())
+  name        String
+  eventId     Int
   submissions Submission[]
+  event       Event        @relation(fields: [eventId], references: [id])
+  members     User[]       @relation("TeamMembers")
 }
 
 model Submission {
-  id          Int        @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   title       String
   description String
   githubLink  String?
   videoLink   String?
   files       String?
-  
   teamId      Int
-  team        Team       @relation(fields: [teamId], references: [id])
-  
   eventId     Int
-  event       Event      @relation(fields: [eventId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  
   userId      Int
-  user        User       @relation("UserSubmissions", fields: [userId], references: [id])
-  
   scores      Score[]
+  event       Event   @relation(fields: [eventId], references: [id], onUpdate: NoAction)
+  team        Team    @relation(fields: [teamId], references: [id])
+  user        User    @relation("UserSubmissions", fields: [userId], references: [id])
 }
 
 model Judge {
-  id      Int      @id @default(autoincrement())
-  
+  id      Int     @id @default(autoincrement())
   userId  Int
-  user    User     @relation(fields: [userId], references: [id])
-  
   eventId Int
-  event   Event    @relation(fields: [eventId], references: [id])
-  
+  event   Event   @relation(fields: [eventId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
   scores  Score[]
 }
 
 model Score {
   id           Int        @id @default(autoincrement())
-  
   submissionId Int
-  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  
   judgeId      Int
-  judge        Judge      @relation(fields: [judgeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  
   round        Int
   score        Float
   feedback     String?
+  judge        Judge      @relation(fields: [judgeId], references: [id], onUpdate: NoAction)
+  submission   Submission @relation(fields: [submissionId], references: [id], onUpdate: NoAction)
 }

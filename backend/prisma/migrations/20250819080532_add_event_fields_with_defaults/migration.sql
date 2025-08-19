@@ -1,0 +1,27 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[Event] ADD [endDate] DATETIME2 NOT NULL CONSTRAINT [Event_endDate_df] DEFAULT CURRENT_TIMESTAMP,
+[isOnline] BIT NOT NULL CONSTRAINT [Event_isOnline_df] DEFAULT 0,
+[location] NVARCHAR(1000) NOT NULL CONSTRAINT [Event_location_df] DEFAULT 'TBD',
+[maxParticipants] INT NOT NULL CONSTRAINT [Event_maxParticipants_df] DEFAULT 100,
+[participants] INT NOT NULL CONSTRAINT [Event_participants_df] DEFAULT 0,
+[startDate] DATETIME2 NOT NULL CONSTRAINT [Event_startDate_df] DEFAULT CURRENT_TIMESTAMP,
+[status] NVARCHAR(1000) NOT NULL CONSTRAINT [Event_status_df] DEFAULT 'upcoming',
+[tags] NVARCHAR(1000) NOT NULL CONSTRAINT [Event_tags_df] DEFAULT '',
+[totalPrize] INT NOT NULL CONSTRAINT [Event_totalPrize_df] DEFAULT 0;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
