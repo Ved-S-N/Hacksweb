@@ -12,14 +12,21 @@ datasource db {
 // User
 // ------------------
 model User {
-  id          Int          @id @default(autoincrement())
-  name        String
-  email       String       @unique
-  role        String
-  createdAt   DateTime     @default(now())
-  judges      Judge[]
-  submissions Submission[] @relation("UserSubmissions")
-  teams       Team[]       @relation("TeamMembers")
+  id                Int          @id @default(autoincrement())
+  name              String
+  email             String       @unique
+  password          String
+  role              String       @default("participant")
+  isEmailVerified   Boolean      @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  judges            Judge[]
+  submissions       Submission[] @relation("UserSubmissions")
+  teams             Team[]       @relation("TeamMembers")
+  sessions          Session[]
 }
 
 // ------------------
@@ -165,6 +172,18 @@ model Judge {
   event   Event   @relation(fields: [eventId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
   scores  Score[]
+}
+
+// ------------------
+// Session
+// ------------------
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 // ------------------
