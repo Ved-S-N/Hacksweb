@@ -13,6 +13,8 @@ import submissionRoutes from "./routes/submissions.js";
 import judgingRoutes from "./routes/judging.js";
 import teamRoutes from "./routes/team.js";
 import organizerRoutes from "./routes/organizers.js";
+import authRoutes from "./routes/auth.js";
+import { authenticateToken } from "./middleware/auth.js";
 
 const app = express();
 const PORT = 3000;
@@ -23,12 +25,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Enable CORS with preflight handling
-app.use(cors({
-  origin: 'http://localhost:8081',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
-}));
-app.options('*', cors()); // enable pre-flight for all routes
+app.use(
+  cors({
+    origin: "http://localhost:8080",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+// app.options("*", cors()); // enable pre-flight for all routes
 
 // MongoDB connection
 const connectMongoDB = async () => {
@@ -50,6 +54,7 @@ app.use("/api/submissions", submissionRoutes);
 app.use("/api/judging", judgingRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/organizers", organizerRoutes);
+app.use("/api/auth", authRoutes);
 
 // Start server and connect to MongoDB and Prisma
 app.listen(PORT, async () => {

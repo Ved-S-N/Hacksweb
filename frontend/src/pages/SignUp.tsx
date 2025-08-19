@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 const SignUp: React.FC = () => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { signUp } = useAuth();
@@ -21,10 +28,10 @@ const SignUp: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -32,9 +39,9 @@ const SignUp: React.FC = () => {
 
     try {
       await signUp(name, email, password);
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Sign up failed');
+      setError(error instanceof Error ? error.message : "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -48,7 +55,7 @@ const SignUp: React.FC = () => {
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            Or{" "}
             <Link
               to="/signin"
               className="font-medium text-indigo-600 hover:text-indigo-500"
@@ -72,7 +79,7 @@ const SignUp: React.FC = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -125,25 +132,21 @@ const SignUp: React.FC = () => {
                 />
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating account...
                   </>
                 ) : (
-                  'Sign Up'
+                  "Sign Up"
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter>
             <p className="text-sm text-center w-full">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/signin"
                 className="font-medium text-indigo-600 hover:text-indigo-500"

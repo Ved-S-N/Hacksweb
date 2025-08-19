@@ -226,10 +226,18 @@ const Events = () => {
               {/* Events Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map((event) => {
-                  // Convert tags string to array if needed
-                  const eventTagsArray = event.tags
-                    ? event.tags.split(",")
-                    : [];
+                  // Handle both string and array formats for tags
+                  let eventTagsArray = [];
+                  if (typeof event.tags === "string") {
+                    try {
+                      eventTagsArray = JSON.parse(event.tags);
+                    } catch {
+                      eventTagsArray = event.tags.split(",");
+                    }
+                  } else if (Array.isArray(event.tags)) {
+                    eventTagsArray = event.tags;
+                  }
+
                   return (
                     <EventCard
                       key={event.id}

@@ -111,11 +111,12 @@
 
 import express from "express";
 import { PrismaClient } from "@prisma/client";
+import { authenticateToken } from "../middleware/auth.js"; // ✅ ensure .js extension
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Create an event (with improved error handling)
+// Create an event
 router.post("/", async (req, res) => {
   try {
     const {
@@ -139,8 +140,6 @@ router.post("/", async (req, res) => {
       banner,
     } = req.body;
 
-    console.log("Incoming timeline:", timeline);
-
     // --- Normalize Tags ---
     const tagConnections = (tags || []).map((tag) => ({
       tag: {
@@ -160,33 +159,27 @@ router.post("/", async (req, res) => {
         },
       },
     }));
+
     // --- Normalize Tracks ---
     const trackConnections = (tracks || [])
       .map((track) => {
-        if (typeof track === "string") {
-          return { name: track.trim() };
-        }
-        if (track?.name) {
-          return { name: track.name.trim() };
-        }
-        return null; // ❌ invalid entry
+        if (typeof track === "string") return { name: track.trim() };
+        if (track?.name) return { name: track.name.trim() };
+        return null;
       })
-      .filter(Boolean); // ✅ remove nulls/undefined
+      .filter(Boolean);
 
     // --- Normalize Timeline ---
     const timelineConnections = (timeline || []).map((item) => {
       if (typeof item === "string") {
         const [phase, ...dateParts] = item.split("-");
-        const dateString = dateParts.join("-"); // rebuild full date
+        const dateString = dateParts.join("-");
         return {
           phase: phase?.trim() || "Phase",
           date: new Date(dateString.trim()),
         };
       }
-      return {
-        phase: item.phase?.trim(),
-        date: new Date(item.date),
-      };
+      return { phase: item.phase?.trim(), date: new Date(item.date) };
     });
 
     // --- Normalize Sponsors ---
@@ -195,9 +188,6 @@ router.post("/", async (req, res) => {
     }));
 
     // --- Create Event in Prisma ---
-    console.log("Tracks normalized:", trackConnections);
-    console.log("Timeline normalized:", timelineConnections);
-
     const event = await prisma.event.create({
       data: {
         title,
@@ -213,7 +203,6 @@ router.post("/", async (req, res) => {
         status: status || "upcoming",
         banner: banner || null,
         organizer: { connect: { id: organizerId } },
-
         eventTags: { create: tagConnections },
         eventRules: { create: ruleConnections },
         tracks: { create: trackConnections },
@@ -245,7 +234,7 @@ router.get("/", async (req, res) => {
     res.json(events);
   } catch (err) {
     console.error("Error fetching events:", err);
-    res.status(500).json({ error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -257,14 +246,12 @@ router.get("/:id", async (req, res) => {
       include: { teams: true, submissions: true, judges: true },
     });
 
-    if (!event) {
-      return res.status(404).json({ error: "Event not found" });
-    }
+    if (!event) return res.status(404).json({ error: "Event not found" });
 
     res.json(event);
   } catch (err) {
     console.error("Error fetching event:", err);
-    res.status(500).json({ error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -279,7 +266,7 @@ router.put("/:id", async (req, res) => {
     res.json(updatedEvent);
   } catch (err) {
     console.error("Error updating event:", err);
-    res.status(500).json({ error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -290,7 +277,44 @@ router.delete("/:id", async (req, res) => {
     res.json({ message: "Event deleted" });
   } catch (err) {
     console.error("Error deleting event:", err);
-    res.status(500).json({ error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Register for an event
+router.post("/:id/register", authenticateToken, async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    const userId = req.user.id;
+
+    const event = await prisma.event.findUnique({ where: { id: eventId } });
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    const updatedEvent = await prisma.event.update({
+      where: { id: eventId },
+      data: { participants: { increment: 1 } },
+    });
+
+    res.json({ message: "Successfully registered", event: updatedEvent });
+  } catch (err) {
+    console.error("Error registering for event:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get event registrations
+router.get("/:id/registrations", async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.id);
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { participants: true },
+    });
+
+    res.json({ eventId, registeredCount: event?.participants || 0 });
+  } catch (err) {
+    console.error("Error fetching registrations:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
