@@ -8,6 +8,9 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+// ------------------
+// User
+// ------------------
 model User {
   id          Int          @id @default(autoincrement())
   name        String
@@ -19,39 +22,9 @@ model User {
   teams       Team[]       @relation("TeamMembers")
 }
 
-model Event {
-  id               Int        @id @default(autoincrement())
-  title            String
-  description      String
-  longDescription  String?    
-  startDate        DateTime   @default(now())
-  endDate          DateTime   @default(now())
-  location         String     @default("TBD")
-  isOnline         Boolean    @default(false)
-  totalPrize       Int        @default(0)
-  prize            Int?       //optional now 
-  participants     Int        @default(0)
-  maxParticipants  Int        @default(100)
-  status           String     @default("upcoming")
-  tags             String     @default("[]") // store JSON array as string
-  banner           String?    
-  rules            String     @default("[]") // store JSON array as string
-
-  organizerId      Int?
-  organizer        Organizer? @relation(fields: [organizerId], references: [id])
-  createdAt        DateTime   @default(now())
-
-  teams       Team[]
-  submissions Submission[]
-  judges      Judge[]
-  tracks      Track[]
-  timeline    Timeline[]
-  sponsors    Sponsor[]
-}
-
-
-// Related models
-
+// ------------------
+// Organizer
+// ------------------
 model Organizer {
   id          Int     @id @default(autoincrement())
   name        String
@@ -61,35 +34,99 @@ model Organizer {
   events      Event[]
 }
 
+// ------------------
+// Event
+// ------------------
+model Event {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  longDescription String?
+  startDate       DateTime
+  endDate         DateTime
+  location        String?
+  isOnline        Boolean   @default(false)
+  totalPrize      Int       @default(0)
+  maxParticipants Int       @default(100)
+  participants    Int       @default(0)
+  status          String    @default("upcoming")
+  banner          String?
+
+  organizer       Organizer @relation(fields: [organizerId], references: [id])
+  organizerId     Int
+
+  tracks          Track[]
+  timeline        Timeline[]
+  sponsors        Sponsor[]
+
+  eventTags       EventTag[]
+  eventRules      EventRule[]
+  teams           Team[]
+  submissions     Submission[]
+  judges          Judge[]
+}
+
+// ------------------
+// Tags & Rules
+// ------------------
+model Tag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  eventTags EventTag[]
+}
+
+model EventTag {
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  tag     Tag   @relation(fields: [tagId], references: [id])
+  tagId   Int
+
+  @@id([eventId, tagId])
+}
+
+model Rule {
+  id         Int         @id @default(autoincrement())
+  text       String      @unique
+  eventRules EventRule[]
+}
+
+model EventRule {
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  rule    Rule  @relation(fields: [ruleId], references: [id])
+  ruleId  Int
+
+  @@id([eventId, ruleId])
+}
+
+// ------------------
+// Tracks, Timeline, Sponsors
+// ------------------
 model Track {
   id      Int    @id @default(autoincrement())
   name    String
-  prize   Int
-  eventId Int
   event   Event  @relation(fields: [eventId], references: [id])
-}
-model Timeline {
-  id        Int    @id @default(autoincrement())
-  time      String
-  eventName String
-  date      String
-  eventId   Int
-  event     Event  @relation(fields: [eventId], references: [id])
+  eventId Int
 }
 
+model Timeline {
+  id      Int      @id @default(autoincrement())
+  phase   String
+  date    DateTime
+  event   Event    @relation(fields: [eventId], references: [id])
+  eventId Int
+}
 
 model Sponsor {
   id      Int    @id @default(autoincrement())
   name    String
-  logo    String
-  tier    String
-  eventId Int
   event   Event  @relation(fields: [eventId], references: [id])
+  eventId Int
 }
 
-
-
-
+// ------------------
+// Team
+// ------------------
 model Team {
   id          Int          @id @default(autoincrement())
   name        String
@@ -99,6 +136,9 @@ model Team {
   members     User[]       @relation("TeamMembers")
 }
 
+// ------------------
+// Submission
+// ------------------
 model Submission {
   id          Int     @id @default(autoincrement())
   title       String
@@ -115,6 +155,9 @@ model Submission {
   user        User    @relation("UserSubmissions", fields: [userId], references: [id])
 }
 
+// ------------------
+// Judge
+// ------------------
 model Judge {
   id      Int     @id @default(autoincrement())
   userId  Int
@@ -124,6 +167,9 @@ model Judge {
   scores  Score[]
 }
 
+// ------------------
+// Score
+// ------------------
 model Score {
   id           Int        @id @default(autoincrement())
   submissionId Int

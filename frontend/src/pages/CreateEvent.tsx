@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 import {
   Card,
   CardContent,
@@ -64,7 +66,7 @@ const CreateEvent = () => {
     banner: "", // optional
     organizerId: 1, // set after creating an organizer
     tracks: [] as any[],
-    timeline: [] as any[],
+    timeline: [],
     sponsors: [] as any[],
   });
 
@@ -457,11 +459,16 @@ const CreateEvent = () => {
                     <Label htmlFor="rules">Event Rules</Label>
                     <Textarea
                       id="rules"
-                      placeholder="List your event rules, requirements, and guidelines..."
+                      placeholder="One rule per line..."
                       className="min-h-[150px]"
-                      value={eventData.rules}
+                      value={eventData.rules.join("\n")} // join array for display
                       onChange={(e) =>
-                        setEventData({ ...eventData, rules: e.target.value })
+                        setEventData({
+                          ...eventData,
+                          rules: e.target.value
+                            .split("\n")
+                            .filter((r) => r.trim() !== ""), // split into array
+                        })
                       }
                     />
                   </div>
@@ -471,11 +478,16 @@ const CreateEvent = () => {
                     <Label htmlFor="timeline">Event Timeline</Label>
                     <Textarea
                       id="timeline"
-                      placeholder="Describe the event schedule, key milestones, and deadlines..."
+                      placeholder="One phase per line, e.g. 'Registration - 2025-08-20'"
                       className="min-h-[120px]"
-                      value={eventData.timeline}
+                      value={eventData.timeline.join("\n")}
                       onChange={(e) =>
-                        setEventData({ ...eventData, timeline: e.target.value })
+                        setEventData({
+                          ...eventData,
+                          timeline: e.target.value
+                            .split("\n")
+                            .filter((t) => t.trim() !== ""),
+                        })
                       }
                     />
                   </div>
@@ -577,6 +589,22 @@ const CreateEvent = () => {
                   <Button
                     onClick={async () => {
                       try {
+                        console.log(
+                          "timeline before submit:",
+                          eventData.timeline
+                        );
+                        console.log("eventData being sent:", {
+                          ...eventData,
+                          timeline: eventData.timeline,
+                        });
+                        console.log("FINAL PAYLOAD:", {
+                          tags: eventData.tags || [],
+                          rules: eventData.rules || [],
+                          tracks: eventData.tracks || [],
+                          timeline: eventData.timeline || [],
+                          sponsors: eventData.sponsors || [],
+                        });
+
                         const response = await fetch(
                           "http://localhost:3000/api/events",
                           {
@@ -585,33 +613,66 @@ const CreateEvent = () => {
                             body: JSON.stringify({
                               title: eventData.title,
                               description: eventData.description,
+                              longDescription: eventData.longDescription,
                               startDate: eventData.startDate.toISOString(),
                               endDate: eventData.endDate.toISOString(),
                               location: eventData.location,
                               isOnline: eventData.isOnline,
-                              price: eventData.totalPrize,
-                              // totalPrize: eventData.totalPrize,
-
+                              totalPrize: eventData.totalPrize,
                               maxParticipants: eventData.maxParticipants,
                               participants: 0,
                               status: "Published",
-                              tags: eventData.tags,
-                              tracks: eventData.tracks,
-                              rules: eventData.rules,
-                              timeline: eventData.timeline,
-                              sponsors: eventData.sponsors,
-                              organizerId: 1,
+                              banner: eventData.banner || null,
+                              organizerId: 1, // or dynamic
+
+                              // ⬇️ Replace these with safe versions
+                              tags: Array.isArray(eventData.tags)
+                                ? eventData.tags
+                                : [],
+                              rules: Array.isArray(eventData.rules)
+                                ? eventData.rules
+                                : [],
+
+                              tracks: Array.isArray(eventData.tracks)
+                                ? eventData.tracks.map((track) => ({
+                                    name: track.name,
+                                  }))
+                                : [],
+
+                              timeline: Array.isArray(eventData.timeline)
+                                ? eventData.timeline.map((item) =>
+                                    typeof item === "string"
+                                      ? {
+                                          phase: item,
+                                          date: new Date().toISOString(),
+                                        }
+                                      : {
+                                          phase: item.phase,
+                                          date:
+                                            item.date instanceof Date
+                                              ? item.date.toISOString()
+                                              : new Date(
+                                                  item.date
+                                                ).toISOString(),
+                                        }
+                                  )
+                                : [],
+
+                              sponsors: Array.isArray(eventData.sponsors)
+                                ? eventData.sponsors.map((sponsor) => ({
+                                    name: sponsor.name,
+                                  }))
+                                : [],
                             }),
                           }
                         );
 
                         const data = await response.json();
-
                         if (response.ok) {
-                          alert("Event published successfully!");
-                          window.location.href = "/events"; // redirect to events page
+                          toast.success("Event created successfully!");
+                          window.location.href = "/events";
                         } else {
-                          alert("Failed to publish event: " + data.error);
+                          toast.error("Failed to publish event: " + data.error);
                         }
                       } catch (err) {
                         console.error(err);

@@ -126,59 +126,113 @@ router.post("/", async (req, res) => {
       endDate,
       location,
       isOnline,
-
       totalPrize,
-      participants,
       maxParticipants,
+      participants,
       status,
       tags,
       rules,
-      banner,
-      organizerId,
       tracks,
       timeline,
       sponsors,
+      organizerId,
+      banner,
     } = req.body;
-    const safeArray = (arr) => (Array.isArray(arr) ? arr : []);
+
+    console.log("Incoming timeline:", timeline);
+
+    // --- Normalize Tags ---
+    const tagConnections = (tags || []).map((tag) => ({
+      tag: {
+        connectOrCreate: {
+          where: { name: typeof tag === "string" ? tag : tag.name },
+          create: { name: typeof tag === "string" ? tag : tag.name },
+        },
+      },
+    }));
+
+    // --- Normalize Rules ---
+    const ruleConnections = (rules || []).map((rule) => ({
+      rule: {
+        connectOrCreate: {
+          where: { text: typeof rule === "string" ? rule : rule.text },
+          create: { text: typeof rule === "string" ? rule : rule.text },
+        },
+      },
+    }));
+    // --- Normalize Tracks ---
+    const trackConnections = (tracks || [])
+      .map((track) => {
+        if (typeof track === "string") {
+          return { name: track.trim() };
+        }
+        if (track?.name) {
+          return { name: track.name.trim() };
+        }
+        return null; // ❌ invalid entry
+      })
+      .filter(Boolean); // ✅ remove nulls/undefined
+
+    // --- Normalize Timeline ---
+    const timelineConnections = (timeline || []).map((item) => {
+      if (typeof item === "string") {
+        const [phase, ...dateParts] = item.split("-");
+        const dateString = dateParts.join("-"); // rebuild full date
+        return {
+          phase: phase?.trim() || "Phase",
+          date: new Date(dateString.trim()),
+        };
+      }
+      return {
+        phase: item.phase?.trim(),
+        date: new Date(item.date),
+      };
+    });
+
+    // --- Normalize Sponsors ---
+    const sponsorConnections = (sponsors || []).map((sponsor) => ({
+      name: typeof sponsor === "string" ? sponsor : sponsor.name,
+    }));
+
+    // --- Create Event in Prisma ---
+    console.log("Tracks normalized:", trackConnections);
+    console.log("Timeline normalized:", timelineConnections);
 
     const event = await prisma.event.create({
       data: {
         title,
         description,
+        longDescription,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+        location,
+        isOnline: isOnline || false,
         totalPrize: totalPrize || 0,
+        maxParticipants: maxParticipants || 100,
+        participants: participants || 0,
+        status: status || "upcoming",
+        banner: banner || null,
+        organizer: { connect: { id: organizerId } },
 
-        tracks: {
-          create: (Array.isArray(tracks) ? tracks : []).map((track) => ({
-            name: track.name, // directly the string
-          })),
-        },
-
-        timeline: {
-          create: (Array.isArray(timeline) ? timeline : []).map((item) => ({
-            phase: item.phase,
-            date: new Date(item.date),
-          })),
-        },
-
-        sponsors: {
-          create: (sponsors || []).map((sponsor) => ({
-            name: sponsor.name,
-          })),
-        },
+        eventTags: { create: tagConnections },
+        eventRules: { create: ruleConnections },
+        tracks: { create: trackConnections },
+        timeline: { create: timelineConnections },
+        sponsors: { create: sponsorConnections },
       },
       include: {
         tracks: true,
         timeline: true,
         sponsors: true,
+        eventTags: { include: { tag: true } },
+        eventRules: { include: { rule: true } },
       },
     });
 
     res.status(201).json(event);
-  } catch (err) {
-    console.error("Error creating event:", err);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
