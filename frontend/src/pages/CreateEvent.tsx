@@ -1,0 +1,486 @@
+import { useState } from "react";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Calendar as CalendarIcon, 
+  MapPin, 
+  Users, 
+  Trophy, 
+  Tag, 
+  Upload,
+  Eye,
+  Save,
+  ArrowLeft,
+  Plus,
+  X
+} from "lucide-react";
+import { Link } from "react-router-dom";
+// Using toLocaleDateString instead of date-fns for simplicity
+
+const CreateEvent = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [eventData, setEventData] = useState({
+    title: "",
+    description: "",
+    startDate: new Date(),
+    endDate: new Date(),
+    location: "",
+    isOnline: false,
+    maxParticipants: 100,
+    totalPrize: 1000,
+    tracks: [] as string[],
+    tags: [] as string[],
+    rules: "",
+    timeline: "",
+    sponsors: [] as string[],
+  });
+
+  const [newTag, setNewTag] = useState("");
+  const [newTrack, setNewTrack] = useState("");
+
+  const addTag = () => {
+    if (newTag && !eventData.tags.includes(newTag)) {
+      setEventData({ ...eventData, tags: [...eventData.tags, newTag] });
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setEventData({ ...eventData, tags: eventData.tags.filter(t => t !== tag) });
+  };
+
+  const addTrack = () => {
+    if (newTrack && !eventData.tracks.includes(newTrack)) {
+      setEventData({ ...eventData, tracks: [...eventData.tracks, newTrack] });
+      setNewTrack("");
+    }
+  };
+
+  const removeTrack = (track: string) => {
+    setEventData({ ...eventData, tracks: eventData.tracks.filter(t => t !== track) });
+  };
+
+  const progress = (currentStep / 4) * 100;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      {/* Header */}
+      <section className="bg-gradient-to-r from-primary/5 to-primary-hover/5 py-8 border-b">
+        <div className="container">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/dashboard">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Create New Event</h1>
+                <p className="text-muted-foreground">
+                  Set up your hackathon and start building an amazing community
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="sm">
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button variant="outline" size="sm">
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+            </div>
+          </div>
+          
+          {/* Progress */}
+          <div className="mt-6">
+            <div className="flex justify-between text-sm text-muted-foreground mb-2">
+              <span>Step {currentStep} of 4</span>
+              <span>{Math.round(progress)}% complete</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        </div>
+      </section>
+
+      {/* Form Content */}
+      <section className="py-8">
+        <div className="container max-w-4xl">
+          <Tabs value={`step${currentStep}`} className="space-y-6">
+            {/* Step Navigation */}
+            <TabsList className="grid grid-cols-4 w-full">
+              <TabsTrigger value="step1" onClick={() => setCurrentStep(1)}>
+                Basic Info
+              </TabsTrigger>
+              <TabsTrigger value="step2" onClick={() => setCurrentStep(2)}>
+                Details
+              </TabsTrigger>
+              <TabsTrigger value="step3" onClick={() => setCurrentStep(3)}>
+                Tracks & Rules
+              </TabsTrigger>
+              <TabsTrigger value="step4" onClick={() => setCurrentStep(4)}>
+                Review
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Step 1: Basic Information */}
+            <TabsContent value="step1" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Information</CardTitle>
+                  <CardDescription>
+                    Let's start with the fundamental details of your event
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Event Title *</Label>
+                    <Input
+                      id="title"
+                      placeholder="e.g. AI Innovation Challenge 2024"
+                      value={eventData.title}
+                      onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description *</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe your event, its goals, and what participants can expect..."
+                      className="min-h-[120px]"
+                      value={eventData.description}
+                      onChange={(e) => setEventData({ ...eventData, description: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Start Date *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {eventData.startDate.toLocaleDateString()}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={eventData.startDate}
+                            onSelect={(date) => date && setEventData({ ...eventData, startDate: date })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>End Date *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {eventData.endDate.toLocaleDateString()}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={eventData.endDate}
+                            onSelect={(date) => date && setEventData({ ...eventData, endDate: date })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        checked={eventData.isOnline}
+                        onCheckedChange={(checked) => setEventData({ ...eventData, isOnline: checked })}
+                      />
+                      <Label>This is an online event</Label>
+                    </div>
+
+                    {!eventData.isOnline && (
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location *</Label>
+                        <Input
+                          id="location"
+                          placeholder="e.g. San Francisco, CA or Specific venue address"
+                          value={eventData.location}
+                          onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end">
+                <Button onClick={() => setCurrentStep(2)}>
+                  Next: Event Details
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Step 2: Event Details */}
+            <TabsContent value="step2" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Event Details</CardTitle>
+                  <CardDescription>
+                    Configure capacity, prizes, and categorization
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxParticipants">Max Participants</Label>
+                      <Input
+                        id="maxParticipants"
+                        type="number"
+                        min="1"
+                        value={eventData.maxParticipants}
+                        onChange={(e) => setEventData({ ...eventData, maxParticipants: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="totalPrize">Total Prize Pool ($)</Label>
+                      <Input
+                        id="totalPrize"
+                        type="number"
+                        min="0"
+                        value={eventData.totalPrize}
+                        onChange={(e) => setEventData({ ...eventData, totalPrize: parseInt(e.target.value) || 0 })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div className="space-y-2">
+                    <Label>Tags</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Add a tag (e.g. AI, Web3, Mobile)"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                      />
+                      <Button type="button" onClick={addTag}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {eventData.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="flex items-center space-x-1">
+                          <span>{tag}</span>
+                          <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Banner Upload */}
+                  <div className="space-y-2">
+                    <Label>Event Banner</Label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                      <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Drag and drop an image, or click to browse
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Recommended size: 1200x600px
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                  Previous
+                </Button>
+                <Button onClick={() => setCurrentStep(3)}>
+                  Next: Tracks & Rules
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Step 3: Tracks & Rules */}
+            <TabsContent value="step3" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tracks & Rules</CardTitle>
+                  <CardDescription>
+                    Define competition tracks and event rules
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Tracks */}
+                  <div className="space-y-2">
+                    <Label>Competition Tracks</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Add a track (e.g. Best AI Innovation, Best Mobile App)"
+                        value={newTrack}
+                        onChange={(e) => setNewTrack(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && addTrack()}
+                      />
+                      <Button type="button" onClick={addTrack}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2 mt-2">
+                      {eventData.tracks.map((track) => (
+                        <div key={track} className="flex items-center justify-between p-3 border rounded-lg">
+                          <span>{track}</span>
+                          <X className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-foreground" onClick={() => removeTrack(track)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Rules */}
+                  <div className="space-y-2">
+                    <Label htmlFor="rules">Event Rules</Label>
+                    <Textarea
+                      id="rules"
+                      placeholder="List your event rules, requirements, and guidelines..."
+                      className="min-h-[150px]"
+                      value={eventData.rules}
+                      onChange={(e) => setEventData({ ...eventData, rules: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="space-y-2">
+                    <Label htmlFor="timeline">Event Timeline</Label>
+                    <Textarea
+                      id="timeline"
+                      placeholder="Describe the event schedule, key milestones, and deadlines..."
+                      className="min-h-[120px]"
+                      value={eventData.timeline}
+                      onChange={(e) => setEventData({ ...eventData, timeline: e.target.value })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                  Previous
+                </Button>
+                <Button onClick={() => setCurrentStep(4)}>
+                  Next: Review
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* Step 4: Review */}
+            <TabsContent value="step4" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Review & Publish</CardTitle>
+                  <CardDescription>
+                    Review your event details before publishing
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold">Event Title</h3>
+                        <p className="text-muted-foreground">{eventData.title || "Not set"}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Description</h3>
+                        <p className="text-muted-foreground text-sm">{eventData.description || "Not set"}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Date & Location</h3>
+                        <p className="text-muted-foreground text-sm">
+                          {eventData.startDate.toLocaleDateString()} - {eventData.endDate.toLocaleDateString()}
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          {eventData.isOnline ? "Online Event" : eventData.location || "Location not set"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="font-semibold">Capacity & Prizes</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Max {eventData.maxParticipants} participants
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          ${eventData.totalPrize.toLocaleString()} total prize pool
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Tags</h3>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {eventData.tags.map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">Tracks</h3>
+                        <ul className="text-muted-foreground text-sm mt-1">
+                          {eventData.tracks.map((track) => (
+                            <li key={track}>• {track}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setCurrentStep(3)}>
+                  Previous
+                </Button>
+                <div className="space-x-2">
+                  <Button variant="outline">
+                    Save as Draft
+                  </Button>
+                  <Button>
+                    Publish Event
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default CreateEvent;
