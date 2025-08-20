@@ -1,40 +1,71 @@
-# Project Submission System Implementation
+# Project Submission Team & Tech Fix - TODO
 
-## Phase 1: Database Schema Updates
+## ✅ Completed Steps
+1. ✅ Analyzed the issue - identified that team and tech sections are not displaying
+2. ✅ Created TeamTechDisplay component for displaying team and tech information
+3. ✅ Updated SubmissionPortal with proper imports and component integration
 
-- [ ] Update Prisma schema for multi-round submissions
-- [ ] Create MongoDB schemas for metadata
-- [ ] Run database migrations
+## 🔄 Remaining Steps
 
-## Phase 2: Azure Blob Storage Setup
+### Frontend Updates
+- [ ] Update EnhancedProjectSubmission.tsx to properly pass team and tech data
+- [ ] Update SubmissionPortal.tsx to fetch actual team and tech data from backend
+- [ ] Add proper loading states for team and tech data
+- [ ] Add error handling for failed data fetches
 
-- [ ] Create Azure Storage service
-- [ ] Configure file upload middleware
-- [ ] Implement secure file access
+### Backend Integration
+- [ ] Ensure backend endpoints are properly returning team and tech data
+- [ ] Add validation for team and tech data in submission creation
+- [ ] Add proper error handling for missing team/tech data
 
-## Phase 3: Backend Routes
+### Testing & Validation
+- [ ] Test team display functionality
+- [ ] Test tech display functionality
+- [ ] Test submission flow with team and tech data
+- [ ] Verify data persistence
 
-- [ ] Enhanced submission routes with multi-round support
-- [ ] File upload/download endpoints
-- [ ] Judge scoring routes for rounds
-- [ ] Live event submission trigger
+### Documentation
+- [ ] Update PROJECT_SUBMISSION_GUIDE.md with team and tech requirements
+- [ ] Add usage examples for TeamTechDisplay component
 
-## Phase 4: Frontend Components
+## 🔧 Technical Details
 
-- [ ] Submission portal with multi-round interface
-- [ ] File upload component with progress
-- [ ] Judge dashboard for scoring
-- [ ] Live event submission button
+### Data Structure
+```typescript
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
-## Phase 5: Integration & Testing
+interface SubmissionData {
+  projectName: string;
+  description: string;
+  technologies: string[];
+  teamMembers: TeamMember[];
+  features: string[];
+}
+```
 
-- [ ] Connect all components
-- [ ] Test multi-round flow
-- [ ] Test live event submission
-- [ ] Security validation
+### API Endpoints
+- GET `/api/project-submissions/user/:eventId` - Fetch submission with team/tech data
+- POST `/api/project-submissions/create` - Create submission with team/tech data
+- POST `/api/project-submissions/complete` - Complete submission with team/tech data
 
-## Additional Feature: Live Event Submission
+### Component Usage
+```tsx
+<TeamTechDisplay 
+  teamMembers={submissionData.teamMembers}
+  technologies={submissionData.technologies}
+  features={submissionData.features}
+/>
+```
 
-- [ ] Add submission button visibility logic based on event status
-- [ ] Implement real-time event status updates
-- [ ] Create submission modal for live events
+## 🎯 Success Criteria
+- [ ] Team members are displayed with name, email, and role
+- [ ] Technologies are displayed as badges
+- [ ] Features are displayed as a list
+- [ ] Data persists across page refreshes
+- [ ] Error states are handled gracefully
+- [ ] Loading states are shown during data fetch

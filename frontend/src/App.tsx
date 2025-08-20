@@ -16,6 +16,7 @@ import SignUp from "./pages/SignUp";
 import SubmissionPortal from "./pages/SubmissionPortal";
 import NotFound from "./pages/NotFound";
 import EnhancedProjectSubmission from "./pages/EnhancedProjectSubmission";
+import ReadOnlySubmission from "./pages/ReadOnlySubmission";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/submit/:eventId" element={<SubmissionPortal />} />
               <Route path="/submit/:eventId/enhanced" element={<EnhancedProjectSubmission />} />
               <Route path="/submit/:eventId/complete" element={<EnhancedProjectSubmission />} />
+              <Route path="/submission/:submissionId" element={<ReadOnlySubmission />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

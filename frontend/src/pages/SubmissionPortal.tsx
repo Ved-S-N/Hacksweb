@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import LiveSubmissionButton from "@/components/LiveSubmissionButton";
-import { PlusCircle, ArrowRight } from "lucide-react";
+import TeamTechDisplay from "@/components/TeamTechDisplay";
+import { PlusCircle, ArrowRight, Users, Code, Settings } from "lucide-react";
 
 interface Event {
   id: number;
@@ -28,6 +29,8 @@ interface Submission {
   status: string;
   createdAt: string;
   submittedAt?: string;
+  technologies: string[];
+  features: string[];
   team: {
     id: number;
     name: string;
@@ -35,6 +38,7 @@ interface Submission {
       id: number;
       name: string;
       email: string;
+      role?: string;
     }>;
   };
 }
@@ -80,9 +84,26 @@ const SubmissionPortal: React.FC = () => {
       const eventData = await eventRes.json();
       setEvent(eventData);
 
-      // Initialize empty arrays for rounds and submissions since endpoints don't exist
+      // Load submissions for this event and user
+      const submissionsRes = await fetch(
+        `http://localhost:3000/api/project-submissions/event/${eventId}`
+      );
+      
+      if (submissionsRes.ok) {
+        const submissionsData = await submissionsRes.json();
+        // Filter submissions for current user/team
+        const userSubmissions = submissionsData.data?.filter(
+          (submission: any) => submission.userId === parseInt(user?.id?.toString() || '0') || 
+          submission.team?.members?.some((member: any) => member.id === parseInt(user?.id?.toString() || '0'))
+        ) || [];
+        setSubmissions(userSubmissions);
+      } else {
+        console.log("No submissions found for this event");
+        setSubmissions([]);
+      }
+
+      // Initialize empty rounds array
       setRounds([]);
-      setSubmissions([]);
     } catch (error) {
       console.error("Error loading event data:", error);
       toast.error("Failed to load event data");
@@ -174,6 +195,7 @@ const SubmissionPortal: React.FC = () => {
         <TabsList className="mb-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="submissions">My Submissions</TabsTrigger>
+          <TabsTrigger value="team-tech">Team & Tech</TabsTrigger>
           <TabsTrigger value="rounds">Rounds</TabsTrigger>
         </TabsList>
 
@@ -264,6 +286,29 @@ const SubmissionPortal: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team-tech">
+          <div className="space-y-4">
+            {submissions.length > 0 ? (
+              submissions.map((submission) => (
+                <div key={submission.id} className="space-y-4">
+                  <h3 className="text-lg font-semibold">{submission.title}</h3>
+                  <TeamTechDisplay 
+                    teamMembers={submission.team?.members || []}
+                    technologies={submission.technologies || []}
+                    features={submission.features || []}
+                  />
+                </div>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-gray-500">No submissions with team and tech data available</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </TabsContent>
 

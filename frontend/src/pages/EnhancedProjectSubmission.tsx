@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,6 +52,8 @@ const EnhancedProjectSubmission: React.FC = () => {
   const [team, setTeam] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('basic');
   const [progress, setProgress] = useState(0);
+  const [existingSubmission, setExistingSubmission] = useState<any>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   
   const [submissionData, setSubmissionData] = useState<SubmissionData>({
     projectName: '',
@@ -234,6 +237,7 @@ const EnhancedProjectSubmission: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      <Navbar />
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">

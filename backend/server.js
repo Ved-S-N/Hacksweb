@@ -14,6 +14,7 @@ import judgingRoutes from "./routes/judging.js";
 import teamRoutes from "./routes/team.js";
 import organizerRoutes from "./routes/organizers.js";
 import authRoutes from "./routes/auth.js";
+import projectSubmissionRoutes from "./routes/projectSubmission.js";
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use("/api/judging", judgingRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/organizers", organizerRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/project-submissions", projectSubmissionRoutes);
 
 app.listen(PORT, async () => {
   console.log(`Server is running on port ${PORT}`);
