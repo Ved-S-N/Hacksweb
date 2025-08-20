@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "sqlserver"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// ------------------
+// User
+// ------------------
+model User {
+  id                Int          @id @default(autoincrement())
+  name              String
+  email             String       @unique
+  password          String
+  role              String       @default("participant")
+  isEmailVerified   Boolean      @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  judges            Judge[]
+  submissions       Submission[] @relation("UserSubmissions")
+  teams             Team[]       @relation("TeamMembers")
+  sessions          Session[]
+}
+
+// ------------------
+// Organizer
+// ------------------
+model Organizer {
+  id          Int     @id @default(autoincrement())
+  name        String
+  avatar      String?
+  description String?
+  website     String?
+  events      Event[]
+}
+
+// ------------------
+// Event
+// ------------------
+model Event {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String
+  longDescription String?
+  startDate       DateTime
+  endDate         DateTime
+  location        String?
+  isOnline        Boolean   @default(false)
+  totalPrize      Int       @default(0)
+  maxParticipants Int       @default(100)
+  participants    Int       @default(0)
+  status          String    @default("upcoming")
+  banner          String?
+  isLive          Boolean   @default(false)
+
+  organizer       Organizer @relation(fields: [organizerId], references: [id])
+  organizerId     Int
+
+  tracks          Track[]
+  timeline        Timeline[]
+  sponsors        Sponsor[]
+
+  eventTags       EventTag[]
+  eventRules      EventRule[]
+  teams           Team[]
+  rounds          Round[]
+  submissions     Submission[]
+  judges          Judge[]
+}
+
+// ------------------
+// Round Management
+// ------------------
+model Round {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  roundNumber Int
+  eventId     Int
+  event       Event     @relation(fields: [eventId], references: [id])
+  submissions SubmissionRound[]
+}
+
+// ------------------
+// Tags & Rules
+// ------------------
+model Tag {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  eventTags EventTag[]
+}
+
+model EventTag {
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  tag     Tag   @relation(fields: [tagId], references: [id])
+  tagId   Int
+
+  @@id([eventId, tagId])
+}
+
+model Rule {
+  id         Int         @id @default(autoincrement())
+  text       String      @unique
+  eventRules EventRule[]
+}
+
+model EventRule {
+  event   Event @relation(fields: [eventId], references: [id])
+  eventId Int
+  rule    Rule  @relation(fields: [ruleId], references: [id])
+  ruleId  Int
+
+  @@id([eventId, ruleId])
+}
+
+// ------------------
+// Tracks, Timeline, Sponsors
+// ------------------
+model Track {
+  id      Int    @id @default(autoincrement())
+  name    String
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId Int
+}
+
+model Timeline {
+  id      Int      @id @default(autoincrement())
+  phase   String
+  date    DateTime
+  event   Event    @relation(fields: [eventId], references: [id])
+  eventId Int
+}
+
+model Sponsor {
+  id      Int    @id @default(autoincrement())
+  name    String
+  event   Event  @relation(fields: [eventId], references: [id])
+  eventId Int
+}
+
+// ------------------
+// Team
+// ------------------
+model Team {
+  id          Int          @id @default(autoincrement())
+  name        String
+  eventId     Int
+  submissions Submission[]
+  event       Event        @relation(fields: [eventId], references: [id])
+  members     User[]       @relation("TeamMembers")
+}
+
+// ------------------
+// Submission System with Multi-Round Support
+// ------------------
+model Submission {
+  id          Int               @id @default(autoincrement())
+  title       String
+  description String
+  githubLink  String?
+  videoLink   String?
+  files       String?
+  teamId      Int
+  eventId     Int
+  userId      Int
+  status      String            @default("draft")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  submittedAt DateTime?
+  
+  scores      Score[]
+  event       Event             @relation(fields: [eventId], references: [id], onUpdate: NoAction)
+  team        Team              @relation(fields: [teamId], references: [id])
+  user        User              @relation("UserSubmissions", fields: [userId], references: [id])
+  rounds      SubmissionRound[]
+}
+
+model SubmissionRound {
+  id            Int        @id @default(autoincrement())
+  submissionId  Int
+  roundId       Int
+  status        String     @default("pending")
+  submittedAt   DateTime?
+  feedback      String?
+  score         Float?
+  
+  submission    Submission @relation(fields: [submissionId], references: [id])
+  round         Round      @relation(fields: [roundId], references: [id])
+  
+  @@unique([submissionId, roundId])
+}
+
+// ------------------
+// Judge
+// ------------------
+model Judge {
+  id      Int     @id @default(autoincrement())
+  userId  Int
+  eventId Int
+  event   Event   @relation(fields: [eventId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  scores  Score[]
+}
+
+// ------------------
+// Session
+// ------------------
+model Session {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ------------------
+// Score
+// ------------------
+model Score {
+  id                Int        @id @default(autoincrement())
+  submissionId      Int
+  judgeId           Int
+  round             Int
+  score             Float
+  feedback          String?
+  technicalScore    Float?
+  innovationScore   Float?
+  presentationScore Float?
+  impactScore       Float?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  
+  judge             Judge      @relation(fields: [judgeId], references: [id], onUpdate: NoAction)
+  submission        Submission @relation(fields: [submissionId], references: [id], onUpdate: NoAction)
+}

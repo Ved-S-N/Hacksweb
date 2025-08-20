@@ -6,15 +6,16 @@ import { PrismaClient } from "@prisma/client";
 
 import chatRoutes from "./routes/chat.js";
 import announcementRoutes from "./routes/announcements.js";
+import SubmissionMetadata from "./models/submissionMetadata.js";
 
 import userRoutes from "./routes/users.js";
 import eventRoutes from "./routes/events.js";
 import submissionRoutes from "./routes/submissions.js";
+import submissionEnhancedRoutes from "./routes/submissionsEnhanced.js";
 import judgingRoutes from "./routes/judging.js";
 import teamRoutes from "./routes/team.js";
 import organizerRoutes from "./routes/organizers.js";
 import authRoutes from "./routes/auth.js";
-import { authenticateToken } from "./middleware/auth.js";
 
 const app = express();
 const PORT = 3000;
@@ -51,6 +52,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use("/api/submissions-enhanced", submissionEnhancedRoutes);
 app.use("/api/judging", judgingRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/organizers", organizerRoutes);

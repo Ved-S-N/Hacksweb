@@ -169,16 +169,28 @@ export const EventCard = ({
           <Button asChild variant="outline" className="flex-1">
             <Link to={`/event/${id}`}>View Details</Link>
           </Button>
-          {status === "upcoming" && (
-            <Button asChild className="flex-1">
-              <Link to={`/event/${id}/register`}>Register</Link>
-            </Button>
-          )}
-          {status === "ongoing" && (
-            <Button asChild className="flex-1 bg-success hover:bg-success/90">
-              <Link to={`/event/${id}/submit`}>Submit Project</Link>
-            </Button>
-          )}
+          {(() => {
+            const eventStartDate = new Date(startDate);
+            const now = new Date();
+            const isLive = eventStartDate <= now;
+
+            if (isLive) {
+              return (
+                <Button
+                  asChild
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Link to={`/submit/${id}`}>Submit Project</Link>
+                </Button>
+              );
+            } else {
+              return (
+                <Button asChild className="flex-1">
+                  <Link to={`/event/${id}/register`}>Register</Link>
+                </Button>
+              );
+            }
+          })()}
           {status === "ended" && (
             <Button asChild variant="outline" className="flex-1">
               <Link to={`/event/${id}/results`}>View Results</Link>
