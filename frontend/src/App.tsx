@@ -38,6 +38,7 @@ const App = () => (
               <Route path="/signup" element={<SignUp />} />
               <Route path="/submit" element={<SubmissionPortal />} />
               <Route path="/submit/:eventId" element={<SubmissionPortal />} />
+              <Route path="/submit/:eventId/enhanced" element={<EnhancedProjectSubmission />} />
               <Route path="/submit/:eventId/complete" element={<EnhancedProjectSubmission />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

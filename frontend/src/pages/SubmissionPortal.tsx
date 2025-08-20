@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import LiveSubmissionButton from "@/components/LiveSubmissionButton";
+import { PlusCircle, ArrowRight } from "lucide-react";
 
 interface Event {
   id: number;
@@ -50,6 +51,7 @@ interface Round {
 const SubmissionPortal: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -203,6 +205,18 @@ const SubmissionPortal: React.FC = () => {
 
         <TabsContent value="submissions">
           <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">My Submissions</h3>
+              <Button 
+                onClick={() => navigate(`/submit/${eventId}/enhanced`)}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                size="sm"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Enhanced Submission
+              </Button>
+            </div>
+            
             {submissions
               .filter((s) => s.team.id === team?.id)
               .map((submission) => (
@@ -244,8 +258,8 @@ const SubmissionPortal: React.FC = () => {
                 <Card>
                   <CardContent className="text-center py-8">
                     <p className="text-gray-500 mb-4">No submissions yet</p>
-                    <Button onClick={() => setActiveTab("rounds")}>
-                      View Available Rounds
+                    <Button onClick={() => navigate(`/events/${eventId}/submit`)}>
+                      Create New Submission
                     </Button>
                   </CardContent>
                 </Card>
